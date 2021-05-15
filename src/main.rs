@@ -7,7 +7,7 @@ mod config;
 mod ssh_util;
 
 fn main() {
-    let matchs = App::new("sshTool").version("1.0")
+    let arg_match = App::new("sshTool").version("1.0")
         .author("Rookie. <gb880327@189.cn>")
         .about("ssh管理工具")
         .subcommand(SubCommand::with_name("list").about("查看服务器配置"))
@@ -30,10 +30,10 @@ fn main() {
         )
         .get_matches();
 
-    let is_add = matchs.is_present("add");
+    let is_add = arg_match.is_present("add");
     match ssh_util::SshUtil::new(is_add) {
         Ok(mut ssh_util) => {
-            match ssh_util.exec(matchs) {
+            match ssh_util.exec(arg_match) {
                 Ok(()) => {}
                 Err(err) => println!("{}", err.to_string())
             }

@@ -107,6 +107,7 @@ impl SshUtil {
             let cmd = cmd.arg("-p").arg(&server.password)
                 .arg("scp").arg("-P")
                 .arg(&server.port.to_string())
+                .arg("-r").arg("-C")
                 .arg(format!("{}@{}:{}", server.username, server.host, file_path))
                 .arg(target_path);
             cmd.output().unwrap();
@@ -114,6 +115,7 @@ impl SshUtil {
             let mut cmd = Command::new("scp");
             let cmd = cmd.arg("-P")
                 .arg(&server.port.to_string())
+                .arg("-r").arg("-C")
                 .arg(format!("{}@{}:{}", server.username, server.host, file_path))
                 .arg(target_path);
             cmd.output().unwrap();
