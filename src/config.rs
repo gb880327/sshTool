@@ -17,6 +17,7 @@ pub struct Server {
     pub username: String,
     pub password: String,
     pub private_key: String,
+    pub identity_file: String
 }
 
 

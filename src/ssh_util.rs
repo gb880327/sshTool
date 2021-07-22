@@ -54,7 +54,12 @@ impl SshUtil {
         let index = self.choose_server().unwrap();
         let server = self.config_util.config.servers.get(index).unwrap();
 
-        if server.password.len() > 0 {
+        if server.identity_file.len() > 0 {
+            let mut cmd = Command::new(format!("{}/sshpass", self.path));
+            let cmd = cmd.arg("ssh").arg("-i").arg(&server.identity_file).arg("-p")
+                .arg(&server.port.to_string()).arg(format!("{}@{}", server.username, server.host));
+            cmd.exec();
+        } else if server.password.len() > 0 {
             let mut cmd = Command::new(format!("{}/sshpass", self.path));
             let cmd = cmd.arg("-p").arg(&server.password)
                 .arg("ssh").arg("-p")
@@ -76,7 +81,14 @@ impl SshUtil {
         let index = self.choose_server().unwrap();
         let server = self.config_util.config.servers.get(index).unwrap();
 
-        if server.password.len() > 0 {
+        if server.identity_file.len() > 0 {
+            let mut cmd = Command::new("scp");
+            let cmd = cmd.arg("-i").arg(&server.identity_file)
+                .arg("-P").arg(&server.port.to_string())
+                .arg(file_path)
+                .arg(format!("{}@{}:{}", server.username, server.host, target_path));
+            cmd.output().unwrap();
+        } else if server.password.len() > 0 {
             let mut cmd = Command::new(format!("{}/sshpass", self.path));
             let cmd = cmd.arg("-p").arg(&server.password)
                 .arg("scp").arg("-P")
@@ -102,7 +114,16 @@ impl SshUtil {
     fn download(&self, file_path: String, target_path: String) {
         let index = self.choose_server().unwrap();
         let server = self.config_util.config.servers.get(index).unwrap();
-        if server.password.len() > 0 {
+        if server.identity_file.len() > 0 {
+            let mut cmd = Command::new("scp");
+            let cmd = cmd
+                .arg("-i").arg(&server.identity_file)
+                .arg("-P").arg(&server.port.to_string())
+                .arg("-r").arg("-C")
+                .arg(format!("{}@{}:{}", server.username, server.host, file_path))
+                .arg(target_path);
+            cmd.output().unwrap();
+        } else if server.password.len() > 0 {
             let mut cmd = Command::new(format!("{}/sshpass", self.path));
             let cmd = cmd.arg("-p").arg(&server.password)
                 .arg("scp").arg("-P")
@@ -147,7 +168,11 @@ impl SshUtil {
                 Some(key) => key.to_string(),
                 None => String::new()
             };
-            return self.config_util.add(Server { label, host, port, username, password, private_key });
+            let identity_file = match add.value_of("identity_file") {
+                Some(identity) => identity.to_string(),
+                None => String::new()
+            };
+            return self.config_util.add(Server { label, host, port, username, password, private_key, identity_file });
         }
         if matchs.is_present("rm") {
             let rm = matchs.subcommand_matches("rm").unwrap();
